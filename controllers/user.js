@@ -1,16 +1,20 @@
 const user = require('../models/user')
 const bcrypt = require('bcrypt');
 const userModel = require('../models/user');
+const { validateLength, validateEmail } = require('../helpers/validation');
 
 exports.register = async (req, res) => {
     try {
         console.log(req.body, 'body');
         const { name, email, password } = req.body
         if (!name || !email || !password) return res.status(400).json({ message: "Please provide full credentials!" })
-        const userExist = await userModel.findOne({email})
+        if (!validateLength(name, 3, 15)) return res.status(400).json({ messaage: "name must be 3 characters" })
+        if (!validateLength(password, 6, 25)) return res.status(400).json({ messaage: "password must be 6 characters" })
+        if (!validateEmail(email)) return res.status(400).json({ message: "invalid email address" })
+        const userExist = await userModel.findOne({ email })
         if (userExist) return res.status(400).json({ message: "user Already exist" })
         const crypted = await bcrypt.hash(password, 10);
-        const newUser = await new userModel({ name, email, password:crypted })
+        const newUser = await new userModel({ name, email, password: crypted })
         newUser.save()
         res.status(200).json({ message: "signup success" })
     } catch (error) {
@@ -18,19 +22,52 @@ exports.register = async (req, res) => {
 
     }
 }
-exports.login=async(req,res)=>{
+exports.login = async (req, res) => {
     try {
-        const {name,email,password}=req.body;
+        const { name, email, password } = req.body;
         if (!name || !email || !password) return res.status(400).json({ message: "Please provide full credentials!" })
-        const user=await userModel.findOne({email});
-        if(!user) return res.status(400).json({message:"There is no user is asociated with this email"})
-        const validUser=await bcrypt.compare(password,user.password)
-        if(!validUser) return res.status(400).json({messaage:"invalid password"})
-        res.status(200).json({message:'login success'})
-
-        
+        if (!validateLength(name, 3, 15)) return res.status(400).json({ messaage: "name must be 3 characters" })
+        if (!validateLength(password, 6, 25)) return res.status(400).json({ messaage: "password must be 6 characters" })
+        if (!validateEmail(email)) return res.status(400).json({ message: "invalid email address" })
+        const user = await userModel.findOne({ email });
+        if (!user) return res.status(400).json({ message: "There is no user is asociated with this email" })
+        const validUser = await bcrypt.compare(password, user.password)
+        if (!validUser) return res.status(400).json({ messaage: "invalid password" })
+        res.status(200).json({ message: 'login success' })
     } catch (error) {
         console.log(error);
-        
+
+    }
+}
+
+exports.getAllUsers = async (req, res) => {
+    try {
+        const users = await userModel.find({})
+        res.status(200).json(users)
+    } catch (error) {
+        console.log(error);
+
+    }
+}
+
+exports.resetPassword = async (req, res) => {
+    try {
+        const userId = req.params.id
+        const { oldPassword, newPassword } = req.body
+        const user = await userModel.findById(userId)
+        const valid = await bcrypt.compare(oldPassword, user.password)
+        if (!valid) return res.status(400).json({ message: "invalid password" })
+        const crypted = await bcrypt.hash(newPassword, 10);
+        const updatePassword = await userModel.findByIdAndUpdate(userId, {
+            $set: {
+                password: crypted
+            }
+        })
+        res.status(200).json({ message: "password updated successfully" })
+
+
+    } catch (error) {
+        console.log(error);
+
     }
 }
