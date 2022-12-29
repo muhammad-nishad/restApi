@@ -2,6 +2,7 @@ const user = require('../models/user')
 const bcrypt = require('bcrypt');
 const userModel = require('../models/user');
 const { validateLength, validateEmail } = require('../helpers/validation');
+const { generateToken } = require('../midleware/token');
 
 exports.register = async (req, res) => {
     try {
@@ -15,6 +16,8 @@ exports.register = async (req, res) => {
         if (userExist) return res.status(400).json({ message: "user Already exist" })
         const crypted = await bcrypt.hash(password, 10);
         const newUser = await new userModel({ name, email, password: crypted })
+        const token=generateToken({id:user._id,email:user.email.toString(),},"7d")
+        res.cookie('token',token)
         newUser.save()
         res.status(200).json({ message: "signup success" })
     } catch (error) {
@@ -33,6 +36,8 @@ exports.login = async (req, res) => {
         if (!user) return res.status(400).json({ message: "There is no user is asociated with this email" })
         const validUser = await bcrypt.compare(password, user.password)
         if (!validUser) return res.status(400).json({ messaage: "invalid password" })
+        const token=generateToken({id:user._id,email:user.email.toString(),},"7d")
+        res.cookie('token',token)
         res.status(200).json({ message: 'login success' })
     } catch (error) {
         console.log(error);
@@ -52,11 +57,17 @@ exports.getAllUsers = async (req, res) => {
 
 exports.resetPassword = async (req, res) => {
     try {
-        const userId = req.params.id
+        // console.log(req.params);
+        const { userId } = req.params
+        console.log(userId, 'id');
         const { oldPassword, newPassword } = req.body
+        if (!oldPassword || !newPassword) return res.status(400).json({ message: "Please provide full credentials! " })
+        if (!validateLength(newPassword, 6, 25)) return res.status(400).json({ messaage: "password must be 6 characters" })
+        if (oldPassword == newPassword) return res.status(400).json({ message: " New password is same as the old password " })
         const user = await userModel.findById(userId)
+        if (!user) return res.status(400).json({ message: 'invalid user' })
         const valid = await bcrypt.compare(oldPassword, user.password)
-        if (!valid) return res.status(400).json({ message: "invalid password" })
+        if (!valid) return res.status(400).json({ message: "Old password is not valid" })
         const crypted = await bcrypt.hash(newPassword, 10);
         const updatePassword = await userModel.findByIdAndUpdate(userId, {
             $set: {
@@ -70,4 +81,15 @@ exports.resetPassword = async (req, res) => {
         console.log(error);
 
     }
+}
+exports.logout=async(req,res)=>{
+    try {
+        res.clearCookie('token',{path:'/login'})
+        res.status(200).json({message:'logout success'})
+        
+    } catch (error) {
+        console.log(error)
+        
+    }
+
 }
