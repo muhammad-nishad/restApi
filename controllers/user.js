@@ -89,23 +89,8 @@ exports.resetPassword = async (req, res) => {
             // otp.save()
         })
         res.status(200).json({message:'otp sended to your email plese check and verify it'})
-        // this.verifyOtp()
-
-
-        // if (!oldPassword || !newPassword) return res.status(400).json({ message: "Please provide full credentials! " })
-        // if (!validateLength(newPassword, 6, 25)) return res.status(400).json({ messaage: "password must be 6 characters" })
-        // if (oldPassword == newPassword) return res.status(400).json({ message: " New password is same as the old password " })
-        // const user = await userModel.findById(userId)
-        // if (!user) return res.status(400).json({ message: 'invalid user' })
-        // const valid = await bcrypt.compare(oldPassword, user.password)
-        // if (!valid) return res.status(400).json({ message: "Old password is not valid" })
-        // const crypted = await bcrypt.hash(newPassword, 10);
-        // const updatePassword = await userModel.findByIdAndUpdate(userId, {
-        //     $set: {
-        //         password: crypted
-        //     }
-        // })
-        // res.status(200).json({ message: "password updated successfully" })
+    
+        
 
 
     } catch (error) {
