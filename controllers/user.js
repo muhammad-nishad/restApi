@@ -9,9 +9,6 @@ const otp = require('../models/otp');
 const serviceSID=process.env.serviceSID
 const accountSID=process.env.accountSID
 const authToken=process.env.authToken
-// const serviceSID='VAd06facda696756fbb6db94a8fade8b1e'
-// const accountSID='AC854c1858bab3f0f6a53993976e5d6d45'
-// const authToken='7a818e8fd5e767f265cec8f62ee0d4db'
 const client=require('twilio')(accountSID,authToken)
 
 exports.register = async (req, res) => {
