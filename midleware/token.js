@@ -6,3 +6,9 @@ exports.generateToken=(payload,expired)=>{
         
     })
 }
+
+exports.generateResetToken=(payload,expired)=>{
+    return jwt.sign(payload,process.env.RESET_PASSWORD_TOKEN_SECRET,{
+        expiresIn: expired,
+    })
+}
