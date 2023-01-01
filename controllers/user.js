@@ -6,6 +6,13 @@ const { validateLength, validateEmail } = require('../helpers/validation');
 const { generateToken } = require('../midleware/token');
 const sgMail = require('@sendgrid/mail');
 const otp = require('../models/otp');
+const serviceSID=process.env.serviceSID
+const accountSID=process.env.accountSID
+const authToken=process.env.authToken
+// const serviceSID='VAd06facda696756fbb6db94a8fade8b1e'
+// const accountSID='AC854c1858bab3f0f6a53993976e5d6d45'
+// const authToken='7a818e8fd5e767f265cec8f62ee0d4db'
+const client=require('twilio')(accountSID,authToken)
 
 exports.register = async (req, res) => {
     try {
@@ -90,7 +97,7 @@ exports.resetPassword = async (req, res) => {
         })
         res.status(200).json({message:'otp sended to your email plese check and verify it'})
     
-        
+
 
 
     } catch (error) {
@@ -142,6 +149,35 @@ exports.verifyOtp = async (req, res) => {
         console.log(error);
 
     }
+}
+exports.requestOtp=(req,res)=>{
+    const {number}=req.body
+    client.verify
+    .services(process.env.serviceSID)
+    .verifications.create({
+        to:`+91${number}`,
+        channel:"sms"
+    })
+    .then((response)=>{
+        console.log(response.status);  
+    })
+   
+
+}
+exports.otpVerification=(req,res)=>{
+    const {otp,number}=req.body
+    client.verify
+    .services(process.env.serviceSID)
+    .verificationChecks.create({
+        to:`+91${number}`,
+        code:otp
+    })
+    .then((respone)=>{
+        console.log(respone.status);
+
+    }).catch((error)=>{
+        console.log(error,'wrong one');
+    })
 }
 
 // sgMail.send(message)
